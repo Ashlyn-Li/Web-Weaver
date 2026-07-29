@@ -1,11 +1,17 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { CameraSelector } from './CameraSelector'
 import { CameraView } from './CameraView'
 import { LandingView } from './LandingView'
 import { StatusIndicator } from './StatusIndicator'
+import { TrackingDebugOverlay } from './TrackingDebugOverlay'
 import type { ApplicationPhase } from '../types/application'
 import type { CameraStatus } from '../types/camera'
+import type {
+  HandTrackingStatus,
+  HandTrackingSummary,
+} from '../types/handTracking'
 import { useCamera } from '../hooks/useCamera'
+import { useHandTracking } from '../hooks/useHandTracking'
 
 function getButtonLabel(status: CameraStatus) {
   switch (status) {
@@ -22,10 +28,10 @@ function getButtonLabel(status: CameraStatus) {
   }
 }
 
-function getStatusText(status: CameraStatus, error: string | null) {
+function getCameraStatusText(status: CameraStatus, error: string | null) {
   switch (status) {
     case 'idle':
-      return 'Phase 3: Camera ready to initialise'
+      return 'Phase 4: Camera ready to initialise'
     case 'requesting':
       return 'Requesting camera permission...'
     case 'active':
@@ -36,6 +42,33 @@ function getStatusText(status: CameraStatus, error: string | null) {
       return error ?? 'No compatible camera was found'
     case 'error':
       return error ?? 'Unable to start the camera'
+  }
+}
+
+function getTrackingStatusText(
+  status: HandTrackingStatus,
+  summary: HandTrackingSummary,
+  error: string | null,
+) {
+  switch (status) {
+    case 'idle':
+      return 'Camera active'
+    case 'loading-model':
+      return 'Camera active, loading hand-tracking model...'
+    case 'ready':
+      return summary.handCount === 0 ? 'No hands detected' : 'Hand tracking ready'
+    case 'tracking':
+      if (summary.handCount === 1) {
+        return 'One hand detected'
+      }
+
+      if (summary.handCount >= 2) {
+        return 'Two hands detected'
+      }
+
+      return 'No hands detected'
+    case 'error':
+      return error ?? 'Unable to initialise hand tracking'
   }
 }
 
@@ -55,6 +88,7 @@ function getApplicationPhase(status: CameraStatus): ApplicationPhase {
 }
 
 export function ExperienceShell() {
+  const videoRef = useRef<HTMLVideoElement | null>(null)
   const {
     devices,
     selectedDeviceId,
@@ -67,14 +101,32 @@ export function ExperienceShell() {
   } = useCamera()
   const phase = getApplicationPhase(status)
   const isCameraActive = status === 'active' && stream !== null
-  const statusText = useMemo(() => getStatusText(status, error), [error, status])
+  const handTracking = useHandTracking(videoRef, isCameraActive)
+  const statusText = useMemo(() => {
+    if (isCameraActive) {
+      return getTrackingStatusText(
+        handTracking.status,
+        handTracking.summary,
+        handTracking.error,
+      )
+    }
+
+    return getCameraStatusText(status, error)
+  }, [
+    error,
+    handTracking.error,
+    handTracking.status,
+    handTracking.summary,
+    isCameraActive,
+    status,
+  ])
   const buttonLabel = getButtonLabel(status)
   const buttonDisabled = status === 'requesting' || status === 'active'
 
   return (
     <main className="experience-shell" data-phase={phase}>
       <div className="experience-layer experience-layer--camera">
-        {isCameraActive ? <CameraView stream={stream} /> : null}
+        {isCameraActive ? <CameraView ref={videoRef} stream={stream} /> : null}
       </div>
       <div className="experience-layer experience-layer--graphics" aria-hidden="true" />
       <div className="experience-layer experience-layer--interface">
@@ -100,6 +152,13 @@ export function ExperienceShell() {
               Disable Camera
             </button>
           </div>
+        ) : null}
+        {isCameraActive ? (
+          <TrackingDebugOverlay
+            status={handTracking.status}
+            summary={handTracking.summary}
+            error={handTracking.error}
+          />
         ) : null}
       </div>
       <div className="experience-layer experience-layer--status">

@@ -201,6 +201,28 @@ button {
   text-transform: none;
 }
 
+.tracking-debug-overlay {
+  position: absolute;
+  left: var(--space-page);
+  bottom: var(--space-page);
+  display: grid;
+  gap: 6px;
+  min-width: 220px;
+  padding: 12px;
+  border: 1px solid rgba(151, 164, 181, 0.2);
+  border-radius: 8px;
+  background: rgba(3, 4, 6, 0.58);
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+}
+
+.tracking-debug-overlay p {
+  margin: 0;
+}
+
 .camera-view {
   width: 100%;
   height: 100%;
@@ -254,5 +276,12 @@ button {
 
   .camera-selector select {
     width: 100%;
+  }
+
+  .tracking-debug-overlay {
+    right: var(--space-page);
+    bottom: calc(var(--space-page) + 76px);
+    left: var(--space-page);
+    min-width: 0;
   }
 }

@@ -1,34 +1,49 @@
-import { useEffect, useRef } from 'react'
+import { forwardRef, useEffect, useRef } from 'react'
 
 type CameraViewProps = {
   stream: MediaStream
 }
 
-export function CameraView({ stream }: CameraViewProps) {
-  const videoRef = useRef<HTMLVideoElement | null>(null)
+export const CameraView = forwardRef<HTMLVideoElement, CameraViewProps>(
+  function CameraView({ stream }, ref) {
+    const videoRef = useRef<HTMLVideoElement | null>(null)
 
-  useEffect(() => {
-    const videoElement = videoRef.current
+    const setVideoRef = (videoElement: HTMLVideoElement | null) => {
+      videoRef.current = videoElement
 
-    if (!videoElement) {
-      return
+      if (typeof ref === 'function') {
+        ref(videoElement)
+        return
+      }
+
+      if (ref) {
+        ref.current = videoElement
+      }
     }
 
-    videoElement.srcObject = stream
+    useEffect(() => {
+      const videoElement = videoRef.current
 
-    return () => {
-      videoElement.srcObject = null
-    }
-  }, [stream])
+      if (!videoElement) {
+        return
+      }
 
-  return (
-    <video
-      ref={videoRef}
-      className="camera-view"
-      autoPlay
-      playsInline
-      muted
-      aria-label="Live mirrored camera feed"
-    />
-  )
-}
+      videoElement.srcObject = stream
+
+      return () => {
+        videoElement.srcObject = null
+      }
+    }, [stream])
+
+    return (
+      <video
+        ref={setVideoRef}
+        className="camera-view"
+        autoPlay
+        playsInline
+        muted
+        aria-label="Live mirrored camera feed"
+      />
+    )
+  },
+)
