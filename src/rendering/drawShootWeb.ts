@@ -1,4 +1,3 @@
-import { DEBUG } from '../config/debug'
 import { mapNormalizedVideoPoint } from './videoCoordinateTransform'
 import type { ShootWebControlPoint, ShootWebGeometry } from '../types/web'
 
@@ -89,23 +88,4 @@ export function drawShootWeb({
     context.stroke()
   })
 
-  if (!DEBUG.enabled || !DEBUG.geometry) {
-    return
-  }
-
-  const target = mapPoint(
-    { ...shoot.target, progress: 1 },
-    {
-      height,
-      mirrored,
-      videoHeight,
-      videoWidth,
-      width,
-    },
-  )
-
-  context.beginPath()
-  context.fillStyle = 'rgba(255, 229, 146, 0.9)'
-  context.arc(target.x, target.y, 4, 0, Math.PI * 2)
-  context.fill()
 }
