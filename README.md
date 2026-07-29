@@ -1,7 +1,7 @@
 # Web Weaver
 
-Web Weaver is a browser-based computer vision experiment that transforms live
-hand movement into dynamic spider-web geometry.
+Web Weaver is a browser-based computer vision experiment that will transform
+live hand movement into dynamic spider-web geometry.
 
 The app runs entirely in the browser using React, TypeScript, Vite, MediaPipe
 Tasks Vision, and HTML Canvas. It uses the webcam to detect hands, draw hand
