@@ -223,7 +223,7 @@ button {
   margin: 0;
 }
 
-.gesture-debug-overlay {
+.hand-processing-overlay {
   position: absolute;
   left: var(--space-page);
   top: var(--space-page);
@@ -241,11 +241,11 @@ button {
   backdrop-filter: blur(10px);
 }
 
-.gesture-debug-overlay p {
+.hand-processing-overlay p {
   margin: 0;
 }
 
-.gesture-debug-hand {
+.hand-processing-card {
   display: grid;
   gap: 2px;
   padding-top: 8px;
@@ -323,7 +323,7 @@ button {
     min-width: 0;
   }
 
-  .gesture-debug-overlay {
+  .hand-processing-overlay {
     top: var(--space-page);
     right: var(--space-page);
     left: var(--space-page);

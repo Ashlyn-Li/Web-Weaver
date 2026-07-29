@@ -1,19 +1,16 @@
 import { TRACKING_CONFIG } from '../config/tracking'
-import type { Handedness, NormalisedPoint } from '../types/gesture'
+import type { Handedness, Point3D } from '../types/hand'
 
 type SmoothingEntry = {
-  landmarks: readonly NormalisedPoint[]
+  handedness: Handedness
+  landmarks: readonly Point3D[]
   missingFrames: number
 }
 
 export class LandmarkSmoother {
   private state = new Map<string, SmoothingEntry>()
 
-  smooth(
-    handId: string,
-    handedness: Handedness,
-    landmarks: readonly NormalisedPoint[],
-  ) {
+  smooth(handId: string, handedness: Handedness, landmarks: readonly Point3D[]) {
     const previous = this.state.get(handId)
     const alpha = TRACKING_CONFIG.landmarkSmoothingAlpha
     const smoothedLandmarks =
@@ -30,13 +27,10 @@ export class LandmarkSmoother {
         : landmarks.map((landmark) => ({ ...landmark }))
 
     this.state.set(handId, {
+      handedness,
       landmarks: smoothedLandmarks,
       missingFrames: 0,
     })
-
-    if (handedness === 'Unknown') {
-      this.expireMissingHands(new Set([handId]))
-    }
 
     return smoothedLandmarks
   }
