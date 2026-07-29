@@ -27,11 +27,13 @@ export function LandingView({
           dynamic spider-web geometry.
         </p>
       </div>
-      <CameraPermissionButton
-        label={buttonLabel}
-        disabled={buttonDisabled}
-        onClick={onCameraButtonClick}
-      />
+      {!isCameraActive ? (
+        <CameraPermissionButton
+          label={buttonLabel}
+          disabled={buttonDisabled}
+          onClick={onCameraButtonClick}
+        />
+      ) : null}
       <p className="landing-status" aria-hidden="true">
         {statusText}
       </p>

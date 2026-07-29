@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { CameraSelector } from './CameraSelector'
 import { CameraView } from './CameraView'
 import { LandingView } from './LandingView'
 import { StatusIndicator } from './StatusIndicator'
@@ -54,7 +55,16 @@ function getApplicationPhase(status: CameraStatus): ApplicationPhase {
 }
 
 export function ExperienceShell() {
-  const { stream, status, error, startCamera, stopCamera } = useCamera()
+  const {
+    devices,
+    selectedDeviceId,
+    stream,
+    status,
+    error,
+    startCamera,
+    stopCamera,
+    selectCamera,
+  } = useCamera()
   const phase = getApplicationPhase(status)
   const isCameraActive = status === 'active' && stream !== null
   const statusText = useMemo(() => getStatusText(status, error), [error, status])
@@ -78,9 +88,18 @@ export function ExperienceShell() {
           statusText={statusText}
         />
         {isCameraActive ? (
-          <button type="button" className="secondary-camera-button" onClick={stopCamera}>
-            Disable Camera
-          </button>
+          <div className="camera-controls" aria-label="Camera controls">
+            <CameraSelector
+              devices={devices}
+              selectedDeviceId={selectedDeviceId}
+              onSelectCamera={(deviceId) => {
+                void selectCamera(deviceId)
+              }}
+            />
+            <button type="button" className="secondary-camera-button" onClick={stopCamera}>
+              Disable Camera
+            </button>
+          </div>
         ) : null}
       </div>
       <div className="experience-layer experience-layer--status">

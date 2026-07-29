@@ -1,13 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { CameraStatus, UseCameraResult } from '../types/camera'
+import type { CameraDevice, CameraStatus, UseCameraResult } from '../types/camera'
 
-const cameraConstraints: MediaStreamConstraints = {
-  video: {
-    facingMode: 'user',
-    width: { ideal: 1280 },
-    height: { ideal: 720 },
-  },
-  audio: false,
+function getCameraConstraints(deviceId: string): MediaStreamConstraints {
+  const videoConstraints: MediaTrackConstraints = deviceId
+    ? {
+        deviceId: { exact: deviceId },
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      }
+    : {
+        facingMode: 'user',
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      }
+
+  return {
+    video: videoConstraints,
+    audio: false,
+  }
 }
 
 function stopStream(stream: MediaStream | null) {
@@ -64,10 +74,43 @@ function getCameraError(error: unknown): {
 }
 
 export function useCamera(): UseCameraResult {
+  const [devices, setDevices] = useState<CameraDevice[]>([])
+  const [selectedDeviceId, setSelectedDeviceId] = useState('')
   const [stream, setStream] = useState<MediaStream | null>(null)
   const [status, setStatus] = useState<CameraStatus>('idle')
   const [error, setError] = useState<string | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
+
+  const refreshDevices = useCallback(async () => {
+    if (
+      !navigator.mediaDevices ||
+      typeof navigator.mediaDevices.enumerateDevices !== 'function'
+    ) {
+      setDevices([])
+      return
+    }
+
+    const mediaDevices = await navigator.mediaDevices.enumerateDevices()
+    const videoDevices = mediaDevices
+      .filter((device) => device.kind === 'videoinput')
+      .map((device, index) => ({
+        deviceId: device.deviceId,
+        label: device.label || `Camera ${index + 1}`,
+      }))
+
+    setDevices(videoDevices)
+
+    setSelectedDeviceId((currentDeviceId) => {
+      if (
+        currentDeviceId &&
+        videoDevices.some((device) => device.deviceId === currentDeviceId)
+      ) {
+        return currentDeviceId
+      }
+
+      return videoDevices[0]?.deviceId ?? ''
+    })
+  }, [])
 
   const replaceStream = useCallback((nextStream: MediaStream | null) => {
     stopStream(streamRef.current)
@@ -81,7 +124,7 @@ export function useCamera(): UseCameraResult {
     setError(null)
   }, [replaceStream])
 
-  const startCamera = useCallback(async () => {
+  const startCamera = useCallback(async (deviceId = selectedDeviceId) => {
     if (
       !navigator.mediaDevices ||
       typeof navigator.mediaDevices.getUserMedia !== 'function'
@@ -97,9 +140,10 @@ export function useCamera(): UseCameraResult {
 
     try {
       const nextStream =
-        await navigator.mediaDevices.getUserMedia(cameraConstraints)
+        await navigator.mediaDevices.getUserMedia(getCameraConstraints(deviceId))
 
       replaceStream(nextStream)
+      await refreshDevices()
       setStatus('active')
     } catch (caughtError) {
       replaceStream(null)
@@ -107,7 +151,45 @@ export function useCamera(): UseCameraResult {
       setStatus(cameraError.status)
       setError(cameraError.message)
     }
-  }, [replaceStream])
+  }, [refreshDevices, replaceStream, selectedDeviceId])
+
+  const selectCamera = useCallback(
+    async (deviceId: string) => {
+      setSelectedDeviceId(deviceId)
+
+      if (status === 'active') {
+        await startCamera(deviceId)
+      }
+    },
+    [startCamera, status],
+  )
+
+  useEffect(() => {
+    void refreshDevices().catch(() => {
+      setDevices([])
+    })
+  }, [refreshDevices])
+
+  useEffect(() => {
+    if (
+      !navigator.mediaDevices ||
+      typeof navigator.mediaDevices.addEventListener !== 'function'
+    ) {
+      return
+    }
+
+    const handleDeviceChange = () => {
+      void refreshDevices().catch(() => {
+        setDevices([])
+      })
+    }
+
+    navigator.mediaDevices.addEventListener('devicechange', handleDeviceChange)
+
+    return () => {
+      navigator.mediaDevices.removeEventListener('devicechange', handleDeviceChange)
+    }
+  }, [refreshDevices])
 
   useEffect(() => {
     return () => {
@@ -117,10 +199,13 @@ export function useCamera(): UseCameraResult {
   }, [])
 
   return {
+    devices,
+    selectedDeviceId,
     stream,
     status,
     error,
     startCamera,
     stopCamera,
+    selectCamera,
   }
 }
