@@ -55,7 +55,12 @@ export class InteractionStateMachine {
         ? this.state.candidateFrames + 1
         : 1
 
-    if (candidateFrames >= GESTURE_CONFIG.interactionActivationFrames) {
+    const activationFrames =
+      classification.mode === 'web-shoot'
+        ? GESTURE_CONFIG.shootInteractionActivationFrames
+        : GESTURE_CONFIG.interactionActivationFrames
+
+    if (candidateFrames >= activationFrames) {
       this.state = {
         current: classification.mode,
         candidate: classification.mode,
