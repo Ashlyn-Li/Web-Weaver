@@ -41,7 +41,7 @@ export function getWebAnchorCandidates(
   const candidates = fingertipAnchors.flatMap<WebAnchorCandidate>((anchor) => {
     const position = getLandmark(hand.landmarks, anchor.landmarkIndex)
 
-    if (!position || !hand.fingerStates[anchor.finger].extended) {
+    if (!position) {
       return []
     }
 

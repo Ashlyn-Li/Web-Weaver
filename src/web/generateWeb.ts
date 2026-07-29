@@ -2,9 +2,9 @@ import type { ProcessedHand } from '../types/hand'
 import type { StableInteractionState, WebAnchorCandidate } from '../types/interaction'
 import type { WebGraph } from '../types/web'
 import { createWebAnchors } from './createWebAnchors'
-import { WebShootTargetTracker } from './createWebShootTarget'
 import { generateShootWeb } from './generateShootWeb'
 import { generateWeaveWeb } from './generateWeaveWeb'
+import { ShootWebState } from './ShootWebState'
 import { WebTopologyTracker } from './WebTopologyTracker'
 
 export interface GenerateWebInput {
@@ -14,7 +14,7 @@ export interface GenerateWebInput {
 }
 
 export class WebGenerator {
-  private shootTargetTracker = new WebShootTargetTracker()
+  private shootState = new ShootWebState()
   private topologyTracker = new WebTopologyTracker()
 
   generate({
@@ -23,7 +23,7 @@ export class WebGenerator {
     processedHands,
   }: GenerateWebInput): WebGraph | null {
     if (interaction.current === 'idle') {
-      this.shootTargetTracker.reset()
+      this.shootState.reset()
       this.topologyTracker.reset()
       return null
     }
@@ -35,11 +35,11 @@ export class WebGenerator {
       )
 
       return activeHand
-        ? generateShootWeb(activeHand, this.shootTargetTracker)
+        ? generateShootWeb(activeHand, this.shootState)
         : null
     }
 
-    this.shootTargetTracker.reset()
+    this.shootState.reset()
     return generateWeaveWeb(
       createWebAnchors(anchorCandidates),
       this.topologyTracker,
@@ -47,7 +47,7 @@ export class WebGenerator {
   }
 
   reset() {
-    this.shootTargetTracker.reset()
+    this.shootState.reset()
     this.topologyTracker.reset()
   }
 }

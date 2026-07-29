@@ -1,5 +1,6 @@
 import { WEB_CONFIG } from '../config/web'
 import type { WebAnchor, WebGraph } from '../types/web'
+import { generateCurvedWeavePaths } from './generateCurvedWeavePaths'
 import { generateCrossHandConnections } from './generateCrossHandConnections'
 import { generateHandSupportConnections } from './generateHandSupportConnections'
 import { dedupeStrands } from './strandUtils'
@@ -23,9 +24,14 @@ export function generateWeaveWeb(
     return null
   }
 
+  const weave = generateCurvedWeavePaths(selectedAnchors)
+
   return {
     mode: 'weave',
-    anchors: selectedAnchors,
+    anchors: [weave?.center, ...selectedAnchors].filter(
+      (anchor): anchor is WebAnchor => anchor !== undefined,
+    ),
     strands,
+    weave: weave ?? undefined,
   }
 }

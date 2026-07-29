@@ -21,9 +21,52 @@ export interface WebStrand {
   kind: 'shoot' | 'cross-hand' | 'support'
 }
 
+export interface ShootWebControlPoint {
+  x: number
+  y: number
+  z: number
+  progress: number
+}
+
+export interface ShootWebPath {
+  id: string
+  opacity: number
+  points: readonly ShootWebControlPoint[]
+  role: 'core' | 'outer' | 'cross-link' | 'head'
+  thickness: number
+}
+
+export interface ShootWebGeometry {
+  direction: {
+    x: number
+    y: number
+  }
+  length: number
+  maximumWidth: number
+  origin: WebAnchor
+  paths: readonly ShootWebPath[]
+  seed: number
+  target: WebAnchor
+}
+
+export interface WeaveWebPath {
+  id: string
+  opacity: number
+  points: readonly ShootWebControlPoint[]
+  role: 'spoke' | 'arc' | 'support'
+  thickness: number
+}
+
+export interface WeaveWebGeometry {
+  center: WebAnchor
+  paths: readonly WeaveWebPath[]
+}
+
 export interface WebGraph {
   anchors: readonly WebAnchor[]
+  shoot?: ShootWebGeometry
   strands: readonly WebStrand[]
+  weave?: WeaveWebGeometry
   mode: WebMode
 }
 

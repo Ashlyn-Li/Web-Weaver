@@ -8,9 +8,14 @@ function clamp(value: number) {
 }
 
 export class WebShootTargetTracker {
-  private previousTarget: Point3D | null = null
+  private previousTargets = new Map<string, Point3D>()
 
-  createTarget(origin: WebAnchor, direction: Point3D, handScale: number): WebAnchor {
+  createTarget(
+    origin: WebAnchor,
+    direction: Point3D,
+    handScale: number,
+    id = 'virtual-screen-target',
+  ): WebAnchor {
     const projected = add(
       origin,
       scale(direction, handScale * WEB_CONFIG.shoot.targetDistanceRatio),
@@ -21,23 +26,25 @@ export class WebShootTargetTracker {
       z: projected.z,
     }
 
-    if (this.previousTarget) {
+    const previousTarget = this.previousTargets.get(id)
+
+    if (previousTarget) {
       const alpha = WEB_CONFIG.shoot.targetSmoothingAlpha
-      target.x = alpha * target.x + (1 - alpha) * this.previousTarget.x
-      target.y = alpha * target.y + (1 - alpha) * this.previousTarget.y
-      target.z = alpha * target.z + (1 - alpha) * this.previousTarget.z
+      target.x = alpha * target.x + (1 - alpha) * previousTarget.x
+      target.y = alpha * target.y + (1 - alpha) * previousTarget.y
+      target.z = alpha * target.z + (1 - alpha) * previousTarget.z
     }
 
-    this.previousTarget = target
+    this.previousTargets.set(id, target)
 
     return {
-      id: 'virtual-screen-target',
+      id,
       ...target,
       source: 'screen-target',
     }
   }
 
   reset() {
-    this.previousTarget = null
+    this.previousTargets.clear()
   }
 }

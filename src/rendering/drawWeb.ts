@@ -1,4 +1,6 @@
 import { DEBUG } from '../config/debug'
+import { drawShootWeb } from './drawShootWeb'
+import { drawWeaveWeb } from './drawWeaveWeb'
 import { mapNormalizedVideoPoint } from './videoCoordinateTransform'
 import type { WebAnchor, WebGraph } from '../types/web'
 
@@ -44,6 +46,32 @@ export function drawWeb({
   width,
 }: DrawWebOptions) {
   if (!graph) {
+    return
+  }
+
+  if (graph.mode === 'shoot' && graph.shoot) {
+    drawShootWeb({
+      context,
+      height,
+      mirrored,
+      shoot: graph.shoot,
+      videoHeight,
+      videoWidth,
+      width,
+    })
+    return
+  }
+
+  if (graph.mode === 'weave' && graph.weave) {
+    drawWeaveWeb({
+      context,
+      height,
+      mirrored,
+      videoHeight,
+      videoWidth,
+      weave: graph.weave,
+      width,
+    })
     return
   }
 

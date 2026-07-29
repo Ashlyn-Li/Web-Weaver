@@ -1,6 +1,21 @@
 import { WEB_CONFIG } from '../config/web'
 import type { WebAnchor } from '../types/web'
 
+const WEAVE_ANCHOR_ORDER = [
+  'thumb-tip',
+  'index-tip',
+  'middle-tip',
+  'ring-tip',
+  'little-tip',
+  'palm-centre',
+] as const
+
+function getAnchorPriority(anchor: WebAnchor) {
+  const index = WEAVE_ANCHOR_ORDER.findIndex((anchorName) => anchorName === anchor.anchorName)
+
+  return index === -1 ? WEAVE_ANCHOR_ORDER.length : index
+}
+
 export function selectWeaveAnchors(anchors: readonly WebAnchor[]) {
   const byHand = new Map<string, WebAnchor[]>()
 
@@ -19,15 +34,11 @@ export function selectWeaveAnchors(anchors: readonly WebAnchor[]) {
           WEB_CONFIG.weave.includePalmCentres || anchor.source !== 'palm-centre',
       )
       .sort((first, second) => {
-        if (first.source === 'palm-centre') {
-          return 1
-        }
+        const priorityDifference = getAnchorPriority(first) - getAnchorPriority(second)
 
-        if (second.source === 'palm-centre') {
-          return -1
-        }
-
-        return first.id.localeCompare(second.id)
+        return priorityDifference === 0
+          ? first.id.localeCompare(second.id)
+          : priorityDifference
       })
       .slice(0, WEB_CONFIG.weave.maximumAnchorsPerHand),
   )
