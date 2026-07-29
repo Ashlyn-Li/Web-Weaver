@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react'
 import { CameraSelector } from './CameraSelector'
 import { CameraView } from './CameraView'
+import { GestureDebugOverlay } from './GestureDebugOverlay'
 import { GraphicsCanvas } from './GraphicsCanvas'
 import { LandingView } from './LandingView'
 import { StatusIndicator } from './StatusIndicator'
@@ -174,6 +175,9 @@ export function ExperienceShell() {
             summary={handTracking.summary}
             error={handTracking.error}
           />
+        ) : null}
+        {isCameraActive ? (
+          <GestureDebugOverlay snapshot={handTracking.gestureSnapshot} />
         ) : null}
       </div>
       <div className="experience-layer experience-layer--status">
