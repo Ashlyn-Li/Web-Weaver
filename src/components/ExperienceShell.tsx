@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react'
 import { CameraSelector } from './CameraSelector'
 import { CameraView } from './CameraView'
+import { LandmarkOverlay } from './LandmarkOverlay'
 import { LandingView } from './LandingView'
 import { StatusIndicator } from './StatusIndicator'
 import { TrackingDebugOverlay } from './TrackingDebugOverlay'
@@ -128,7 +129,14 @@ export function ExperienceShell() {
       <div className="experience-layer experience-layer--camera">
         {isCameraActive ? <CameraView ref={videoRef} stream={stream} /> : null}
       </div>
-      <div className="experience-layer experience-layer--graphics" aria-hidden="true" />
+      <div className="experience-layer experience-layer--graphics" aria-hidden="true">
+        {isCameraActive ? (
+          <LandmarkOverlay
+            resultRef={handTracking.latestResultRef}
+            videoRef={videoRef}
+          />
+        ) : null}
+      </div>
       <div className="experience-layer experience-layer--interface">
         <LandingView
           buttonDisabled={buttonDisabled}

@@ -1,7 +1,7 @@
 export const DEBUG = {
   enabled: true,
   tracking: true,
-  landmarks: false,
+  landmarks: true,
   gestures: false,
   geometry: false,
   fps: false,
