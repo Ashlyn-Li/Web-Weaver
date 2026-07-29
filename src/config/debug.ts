@@ -4,6 +4,6 @@ export const DEBUG = {
   landmarks: true,
   handProcessing: true,
   gestures: true,
-  geometry: false,
+  geometry: true,
   fps: false,
 } as const

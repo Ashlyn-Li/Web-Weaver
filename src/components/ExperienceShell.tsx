@@ -7,7 +7,7 @@ import { InteractionDebugOverlay } from './InteractionDebugOverlay'
 import { LandingView } from './LandingView'
 import { StatusIndicator } from './StatusIndicator'
 import { TrackingDebugOverlay } from './TrackingDebugOverlay'
-import { DEBUG } from '../config/debug'
+import { WebGeometryDebugOverlay } from './WebGeometryDebugOverlay'
 import type { ApplicationPhase } from '../types/application'
 import type { CameraStatus } from '../types/camera'
 import type {
@@ -108,13 +108,12 @@ export function ExperienceShell() {
   const phase = getApplicationPhase(status)
   const isCameraActive = status === 'active' && stream !== null
   const handTracking = useHandTracking(videoRef, isCameraActive)
-  const landmarkRenderingEnabled =
-    isCameraActive && DEBUG.enabled && DEBUG.landmarks
   useLandmarkRenderer(
     canvasRef,
     videoRef,
     handTracking.latestResultRef,
-    landmarkRenderingEnabled,
+    handTracking.webGraphRef,
+    isCameraActive,
     true,
   )
   const statusText = useMemo(() => {
@@ -186,6 +185,7 @@ export function ExperienceShell() {
             snapshot={handTracking.interactionSnapshot}
           />
         ) : null}
+        {isCameraActive ? <WebGeometryDebugOverlay graph={handTracking.webGraph} /> : null}
       </div>
       <div className="experience-layer experience-layer--status">
         <StatusIndicator text={statusText} />

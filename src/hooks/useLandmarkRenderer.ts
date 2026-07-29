@@ -1,6 +1,9 @@
 import { useEffect, type RefObject } from 'react'
 import type { HandLandmarkerResult } from '@mediapipe/tasks-vision'
+import { DEBUG } from '../config/debug'
 import { drawHandLandmarks } from '../rendering/drawHandLandmarks'
+import { drawWeb } from '../rendering/drawWeb'
+import type { WebGraph } from '../types/web'
 
 function syncCanvasSize(canvas: HTMLCanvasElement) {
   const pixelRatio = window.devicePixelRatio || 1
@@ -35,6 +38,7 @@ export function useLandmarkRenderer(
   canvasRef: RefObject<HTMLCanvasElement | null>,
   videoRef: RefObject<HTMLVideoElement | null>,
   latestResultRef: RefObject<HandLandmarkerResult | null>,
+  webGraphRef: RefObject<WebGraph | null>,
   enabled: boolean,
   mirrored: boolean,
 ) {
@@ -66,15 +70,29 @@ export function useLandmarkRenderer(
       const { displayWidth, displayHeight, pixelRatio } = syncCanvasSize(canvas)
 
       context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
-      drawHandLandmarks({
+      context.clearRect(0, 0, displayWidth, displayHeight)
+
+      drawWeb({
         context,
-        result: latestResultRef.current,
-        width: displayWidth,
         height: displayHeight,
         mirrored,
-        videoWidth: video.videoWidth,
+        graph: webGraphRef.current,
         videoHeight: video.videoHeight,
+        videoWidth: video.videoWidth,
+        width: displayWidth,
       })
+
+      if (DEBUG.enabled && DEBUG.landmarks) {
+        drawHandLandmarks({
+          context,
+          result: latestResultRef.current,
+          width: displayWidth,
+          height: displayHeight,
+          mirrored,
+          videoWidth: video.videoWidth,
+          videoHeight: video.videoHeight,
+        })
+      }
 
       frameId = requestAnimationFrame(renderFrame)
     }
@@ -96,5 +114,12 @@ export function useLandmarkRenderer(
       resizeObserver?.disconnect()
       clearCanvas(canvas)
     }
-  }, [canvasRef, enabled, latestResultRef, mirrored, videoRef])
+  }, [
+    canvasRef,
+    enabled,
+    latestResultRef,
+    mirrored,
+    videoRef,
+    webGraphRef,
+  ])
 }

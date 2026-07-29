@@ -281,6 +281,28 @@ button {
   border-top: 1px solid rgba(151, 164, 181, 0.18);
 }
 
+.web-geometry-debug-overlay {
+  position: absolute;
+  right: var(--space-page);
+  bottom: var(--space-page);
+  display: grid;
+  gap: 4px;
+  width: min(240px, calc(100vw - var(--space-page) * 2));
+  padding: 12px;
+  border: 1px solid rgba(151, 164, 181, 0.2);
+  border-radius: 8px;
+  background: rgba(3, 4, 6, 0.58);
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+}
+
+.web-geometry-debug-overlay p {
+  margin: 0;
+}
+
 .camera-view {
   width: 100%;
   height: 100%;
@@ -362,6 +384,13 @@ button {
   .interaction-debug-overlay {
     top: calc(var(--space-page) + 180px);
     right: var(--space-page);
+    left: var(--space-page);
+    width: auto;
+  }
+
+  .web-geometry-debug-overlay {
+    right: var(--space-page);
+    bottom: calc(var(--space-page) + 170px);
     left: var(--space-page);
     width: auto;
   }

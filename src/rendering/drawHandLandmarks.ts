@@ -29,8 +29,6 @@ export function drawHandLandmarks({
   videoWidth,
   videoHeight,
 }: DrawHandLandmarksOptions) {
-  context.clearRect(0, 0, width, height)
-
   if (!result || videoWidth <= 0 || videoHeight <= 0) {
     return
   }
