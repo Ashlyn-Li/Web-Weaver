@@ -3,7 +3,7 @@ export const DEBUG = {
   tracking: true,
   landmarks: true,
   handProcessing: true,
-  gestures: false,
+  gestures: true,
   geometry: false,
   fps: false,
 } as const

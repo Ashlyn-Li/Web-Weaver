@@ -4,7 +4,12 @@ import type {
   HandLandmarkerResult,
 } from '@mediapipe/tasks-vision'
 import { createHandLandmarker } from '../vision/createHandLandmarker'
+import {
+  InteractionProcessor,
+  createEmptyInteractionSnapshot,
+} from '../gestures/processInteractions'
 import type { ProcessedHand } from '../types/hand'
+import type { InteractionSnapshot } from '../types/interaction'
 import type {
   HandTrackingStatus,
   HandTrackingSummary,
@@ -64,9 +69,11 @@ function summariesMatch(
 type UseHandTrackingResult = {
   status: HandTrackingStatus
   summary: HandTrackingSummary
+  interactionSnapshot: InteractionSnapshot
   processedHands: readonly ProcessedHand[]
   error: string | null
   latestResultRef: RefObject<HandLandmarkerResult | null>
+  interactionSnapshotRef: RefObject<InteractionSnapshot>
   processedHandsRef: RefObject<readonly ProcessedHand[]>
 }
 
@@ -76,11 +83,17 @@ export function useHandTracking(
 ): UseHandTrackingResult {
   const [status, setStatus] = useState<HandTrackingStatus>('idle')
   const [summary, setSummary] = useState<HandTrackingSummary>(emptySummary)
+  const [interactionSnapshot, setInteractionSnapshot] =
+    useState<InteractionSnapshot>(createEmptyInteractionSnapshot)
   const [processedHands, setProcessedHands] = useState<readonly ProcessedHand[]>([])
   const [error, setError] = useState<string | null>(null)
   const detectorRef = useRef<HandLandmarker | null>(null)
   const frameIdRef = useRef<number | null>(null)
   const latestResultRef = useRef<HandLandmarkerResult | null>(null)
+  const interactionProcessorRef = useRef(new InteractionProcessor())
+  const interactionSnapshotRef = useRef<InteractionSnapshot>(
+    createEmptyInteractionSnapshot(),
+  )
   const processedHandsRef = useRef<readonly ProcessedHand[]>([])
   const processorRef = useRef(new HandProcessor())
   const lastVideoTimeRef = useRef(-1)
@@ -111,14 +124,48 @@ export function useHandTracking(
     }
   }
 
+  const updateInteractionSnapshot = (nextSnapshot: InteractionSnapshot) => {
+    const currentSnapshot = interactionSnapshotRef.current
+    const changed =
+      currentSnapshot.stableInteraction.current !==
+        nextSnapshot.stableInteraction.current ||
+      currentSnapshot.stableInteraction.confidence !==
+        nextSnapshot.stableInteraction.confidence ||
+      currentSnapshot.stableInteraction.activeHandId !==
+        nextSnapshot.stableInteraction.activeHandId ||
+      currentSnapshot.stableHandGestures.length !==
+        nextSnapshot.stableHandGestures.length ||
+      currentSnapshot.stableHandGestures.some((gesture, index) => {
+        const nextGesture = nextSnapshot.stableHandGestures[index]
+
+        return (
+          !nextGesture ||
+          gesture.handId !== nextGesture.handId ||
+          gesture.gesture !== nextGesture.gesture ||
+          gesture.confidence !== nextGesture.confidence
+        )
+      }) ||
+      currentSnapshot.webAnchorCandidates.length !==
+        nextSnapshot.webAnchorCandidates.length
+
+    interactionSnapshotRef.current = nextSnapshot
+
+    if (changed) {
+      setInteractionSnapshot(nextSnapshot)
+    }
+  }
+
   useEffect(() => {
     if (!isActive) {
       setStatus('idle')
       setSummary(emptySummary)
+      setInteractionSnapshot(createEmptyInteractionSnapshot())
       setProcessedHands([])
       setError(null)
       summaryRef.current = emptySummary
       latestResultRef.current = null
+      interactionSnapshotRef.current = createEmptyInteractionSnapshot()
+      interactionProcessorRef.current.reset()
       processedHandsRef.current = []
       processorRef.current.reset()
       return
@@ -126,6 +173,7 @@ export function useHandTracking(
 
     let isCancelled = false
     let consecutiveInferenceErrors = 0
+    const interactionProcessor = interactionProcessorRef.current
     const processor = processorRef.current
 
     const stopLoop = () => {
@@ -158,7 +206,11 @@ export function useHandTracking(
         try {
           const result = detector.detectForVideo(video, performance.now())
           latestResultRef.current = result
-          updateProcessedHands(processor.process(result))
+          const nextHands = processor.process(result)
+          updateProcessedHands(nextHands)
+          updateInteractionSnapshot(
+            interactionProcessor.process(nextHands),
+          )
           consecutiveInferenceErrors = 0
 
           const nextSummary = getSummaryFromResult(result)
@@ -189,9 +241,12 @@ export function useHandTracking(
       setStatus('loading-model')
       setError(null)
       setSummary(emptySummary)
+      setInteractionSnapshot(createEmptyInteractionSnapshot())
       setProcessedHands([])
       summaryRef.current = emptySummary
       latestResultRef.current = null
+      interactionSnapshotRef.current = createEmptyInteractionSnapshot()
+      interactionProcessor.reset()
       processedHandsRef.current = []
       lastVideoTimeRef.current = -1
 
@@ -224,6 +279,8 @@ export function useHandTracking(
       detectorRef.current?.close()
       detectorRef.current = null
       latestResultRef.current = null
+      interactionSnapshotRef.current = createEmptyInteractionSnapshot()
+      interactionProcessor.reset()
       processedHandsRef.current = []
       processor.reset()
     }
@@ -232,9 +289,11 @@ export function useHandTracking(
   return {
     status,
     summary,
+    interactionSnapshot,
     processedHands,
     error,
     latestResultRef,
+    interactionSnapshotRef,
     processedHandsRef,
   }
 }

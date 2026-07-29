@@ -3,6 +3,7 @@ import { CameraSelector } from './CameraSelector'
 import { CameraView } from './CameraView'
 import { GraphicsCanvas } from './GraphicsCanvas'
 import { HandProcessingOverlay } from './HandProcessingOverlay'
+import { InteractionDebugOverlay } from './InteractionDebugOverlay'
 import { LandingView } from './LandingView'
 import { StatusIndicator } from './StatusIndicator'
 import { TrackingDebugOverlay } from './TrackingDebugOverlay'
@@ -178,6 +179,12 @@ export function ExperienceShell() {
         ) : null}
         {isCameraActive ? (
           <HandProcessingOverlay hands={handTracking.processedHands} />
+        ) : null}
+        {isCameraActive ? (
+          <InteractionDebugOverlay
+            hands={handTracking.processedHands}
+            snapshot={handTracking.interactionSnapshot}
+          />
         ) : null}
       </div>
       <div className="experience-layer experience-layer--status">
