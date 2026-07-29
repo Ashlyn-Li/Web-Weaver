@@ -231,7 +231,7 @@ button {
   transform: scaleX(-1);
 }
 
-.landmark-overlay {
+.graphics-canvas {
   position: absolute;
   inset: 0;
   width: 100%;

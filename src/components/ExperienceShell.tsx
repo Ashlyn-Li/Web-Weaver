@@ -1,10 +1,11 @@
 import { useMemo, useRef } from 'react'
 import { CameraSelector } from './CameraSelector'
 import { CameraView } from './CameraView'
-import { LandmarkOverlay } from './LandmarkOverlay'
+import { GraphicsCanvas } from './GraphicsCanvas'
 import { LandingView } from './LandingView'
 import { StatusIndicator } from './StatusIndicator'
 import { TrackingDebugOverlay } from './TrackingDebugOverlay'
+import { DEBUG } from '../config/debug'
 import type { ApplicationPhase } from '../types/application'
 import type { CameraStatus } from '../types/camera'
 import type {
@@ -13,6 +14,7 @@ import type {
 } from '../types/handTracking'
 import { useCamera } from '../hooks/useCamera'
 import { useHandTracking } from '../hooks/useHandTracking'
+import { useLandmarkRenderer } from '../hooks/useLandmarkRenderer'
 
 function getButtonLabel(status: CameraStatus) {
   switch (status) {
@@ -90,6 +92,7 @@ function getApplicationPhase(status: CameraStatus): ApplicationPhase {
 
 export function ExperienceShell() {
   const videoRef = useRef<HTMLVideoElement | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const {
     devices,
     selectedDeviceId,
@@ -103,6 +106,15 @@ export function ExperienceShell() {
   const phase = getApplicationPhase(status)
   const isCameraActive = status === 'active' && stream !== null
   const handTracking = useHandTracking(videoRef, isCameraActive)
+  const landmarkRenderingEnabled =
+    isCameraActive && DEBUG.enabled && DEBUG.landmarks
+  useLandmarkRenderer(
+    canvasRef,
+    videoRef,
+    handTracking.latestResultRef,
+    landmarkRenderingEnabled,
+    true,
+  )
   const statusText = useMemo(() => {
     if (isCameraActive) {
       return getTrackingStatusText(
@@ -130,12 +142,7 @@ export function ExperienceShell() {
         {isCameraActive ? <CameraView ref={videoRef} stream={stream} /> : null}
       </div>
       <div className="experience-layer experience-layer--graphics" aria-hidden="true">
-        {isCameraActive ? (
-          <LandmarkOverlay
-            resultRef={handTracking.latestResultRef}
-            videoRef={videoRef}
-          />
-        ) : null}
+        {isCameraActive ? <GraphicsCanvas ref={canvasRef} /> : null}
       </div>
       <div className="experience-layer experience-layer--interface">
         <LandingView
