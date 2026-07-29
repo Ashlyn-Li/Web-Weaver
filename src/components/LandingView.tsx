@@ -1,12 +1,25 @@
 import { CameraPermissionButton } from './CameraPermissionButton'
 
 type LandingViewProps = {
+  buttonDisabled: boolean
+  buttonLabel: string
+  isCameraActive: boolean
+  onCameraButtonClick: () => void
   statusText: string
 }
 
-export function LandingView({ statusText }: LandingViewProps) {
+export function LandingView({
+  buttonDisabled,
+  buttonLabel,
+  isCameraActive,
+  onCameraButtonClick,
+  statusText,
+}: LandingViewProps) {
   return (
-    <section className="landing-view" aria-labelledby="page-title">
+    <section
+      className={`landing-view${isCameraActive ? ' landing-view--active' : ''}`}
+      aria-labelledby="page-title"
+    >
       <div className="landing-copy">
         <h1 id="page-title">Web Weaver</h1>
         <p>
@@ -14,7 +27,11 @@ export function LandingView({ statusText }: LandingViewProps) {
           dynamic spider-web geometry.
         </p>
       </div>
-      <CameraPermissionButton label="Enable Camera" disabled />
+      <CameraPermissionButton
+        label={buttonLabel}
+        disabled={buttonDisabled}
+        onClick={onCameraButtonClick}
+      />
       <p className="landing-status" aria-hidden="true">
         {statusText}
       </p>
